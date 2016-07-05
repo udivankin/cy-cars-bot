@@ -49,11 +49,17 @@ class Storage {
       .findById(id);
   }
 
-  createUser({ id, username, firstName, lastName }) {
+  hasUser(id) {
     return User
       .count({ where: { id } })
-      .then(count => {
-          if (!count) {
+      .then(count => count > 0);
+  }
+
+  createUser({ id, username, firstName, lastName }) {
+    return this
+      .hasUser(id)
+      .then(hasUser => {
+          if (!hasUser) {
             return sequelize
               .sync()
               .then(() => User.create({ id, username, firstName, lastName }))
@@ -65,21 +71,36 @@ class Storage {
       );
   }
 
+  getSubscriptions(userId) {
+    return sequelize
+      .findAll({ where: { userId } });
+  };
+
   addSubscription(userId, searchString) {
     return sequelize
       .sync()
       .then(() => Subscription.create({ userId, searchString }))
       .then(subscription => {
         console.log('Subscription created', subscription.get({ plain: true }));
-      })
+      });
   };
 
   removeSubscription(id) {
-
+    return sequelize
+      .sync()
+      .then(() => Subscription.destroy({ where: { id } }))
+      .then(subscription => {
+        console.log('Subscription deleted', subscription.get({ plain: true }));
+      });
   };
 
   removeAllSubscriptions(userId) {
-
+    return sequelize
+      .sync()
+      .then(() => Subscription.destroy({ where: { userId } }))
+      .then(subscriptions => {
+        console.log('Subscription deleted', subscriptions);
+      });
   };
 }
 
