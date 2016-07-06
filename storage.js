@@ -28,7 +28,7 @@ Subscription = sequelize.define(
     searchString: Sequelize.STRING,
   },
   {
-    indexes: [{ fields: ['userId'], }]
+    indexes: [{ fields: ['userId', 'searchString'] }]
   }
 );
 
@@ -72,7 +72,7 @@ class Storage {
   }
 
   getSubscriptions(userId) {
-    return sequelize
+    return Subscription
       .findAll({ where: { userId } });
   };
 
@@ -85,12 +85,12 @@ class Storage {
       });
   };
 
-  removeSubscription(id) {
+  removeSubscription(userId, searchString) {
     return sequelize
       .sync()
-      .then(() => Subscription.destroy({ where: { id } }))
+      .then(() => Subscription.destroy({ where: { userId, searchString } }))
       .then(subscription => {
-        console.log('Subscription deleted', subscription.get({ plain: true }));
+        console.log('Subscription deleted', subscription);
       });
   };
 

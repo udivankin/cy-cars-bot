@@ -1,8 +1,16 @@
+const Promise = require('bluebird');
+
+Promise.config({
+  cancellation: true
+});
+
 const TelegramBot = require('node-telegram-bot-api');
-const token = '249976478:AAGOWvMGc26GGG6SnOrSku7lGPm3jGJTrbQ';
-// Setup polling way
-const bot = new TelegramBot(token, { polling: true });
 const storage = require('./storage.js');
+const _ = require('lodash');
+const config = require('./config.js');
+
+// Setup polling way
+const bot = new TelegramBot(config.token, { polling: true });
 
 let currentModes = {}; // userId -> mode
 
@@ -10,77 +18,128 @@ const defaultAnswer = 'Hi there, please use "/" to interact';
 
 const modeAnswers = {
   add: 'We are going to add a car to your watch list! Please enter search string (one or more words)',
-  addSuccess: 'Ok, '
   cancel: 'Ok then! Anythyng else?',
-  clear: 'Your list has been cleared.',
-  delete: 'Please select which searches should we delete:',
+  clear: 'Your watch list has been cleared.',
+  emptyList: 'Sorry, you have no cars in your watch list.',
 };
 
-const processAnswer = (userId, text) => {
-  switch (currentModes[userId]) {
+const processNewUser = user => {
+  storage.createUser({
+    id: user.id,
+    username: user.username,
+    firstName: user.first_name,
+    lastName: user.last_name,
+  });
+
+  bot.sendMessage(user.id, defaultAnswer);
+}
+
+const processCommand = (user, command) => {
+  currentModes[user.id] = command === 'cancel' ? '' : command;
+
+  switch (command) {
     case 'add':
-      storage.addSubscription(userId, text);
-      bot.sendMessage(from.id, 'Ok, "' + text + '" was added to your watch list. We`ll keep you updated!');
+      bot.sendMessage(user.id, modeAnswers[command]);
+
       break;
 
-    case 'delete':
-      storage.removeSubscription(userId, text);
-      bot.sendMessage(from.id, 'Ok, "' + text + '" was removed from your watch list.');
+    case 'cancel':
+      bot.sendMessage(user.id, modeAnswers[command]);
+
       break;
 
     case 'clear':
-      storage.addSubscription(userId, text);
-      bot.sendMessage(from.id, modeAnswers['clear']);
+      storage.removeAllSubscriptions(user.id);
+      bot.sendMessage(user.id, modeAnswers[command]);
 
       break;
 
     case 'list':
-      storage.addSubscription(userId, text);
-      bot.sendMessage(from.id, 'Here is the list');
+      storage
+        .getSubscriptions(user.id)
+        .then(subscriptions => {
+          if (_.isEmpty(subscriptions)) {
+            bot.sendMessage(user.id, modeAnswers['emptyList']);
+          } else {
+            let list = '';
+
+            subscriptions.forEach(item => {
+              list += item.searchString + '\n';
+            });
+
+            bot.sendMessage(user.id, 'Here is your watch list:' + '\n\n' + list);
+          }
+        });
+
+      currentModes[user.id] = '';
+
+      break;
+
+    case 'delete':
+      storage
+        .getSubscriptions(user.id)
+        .then(subscriptions => {
+          if (_.isEmpty(subscriptions)) {
+            bot.sendMessage(user.id, modeAnswers['emptyList']);
+            currentModes[user.id] = '';
+          } else {
+            const list = [];
+
+            subscriptions.forEach(item => {
+              list.push({ text: item.searchString });
+            });
+
+            const markup = {
+              keyboard: [list],
+              resize_keyboard: true,
+              one_time_keyboard: true,
+            };
+
+            bot.sendMessage(user.id, 'Please select what should we delete:', { reply_markup: markup });
+          }
+        });
 
       break;
 
     default:
-
+      break;
   }
 
+  console.log('CurrentMode of user', user.username, '[', user.id, '] was set to', currentModes[user.id]);
+}
 
+const processAnswer = (user, text) => {
+  switch (currentModes[user.id]) {
+    case 'add':
+      storage.addSubscription(user.id, text);
+      bot.sendMessage(user.id, 'Ok, "' + text + '" was added to your watch list. We`ll keep you updated!');
+
+      break;
+
+    case 'delete':
+      storage.removeSubscription(user.id, text);
+      bot.sendMessage(user.id, 'Ok, "' + text + '" was removed from your watch list.', { reply_markup: { hide_keyboard: true } });
+
+      break;
+
+    default:
+      break;
+  }
 };
-
-// Matches /echo [whatever]
-bot.onText(/\/add/, (msg, match) => {
-  const fromId = msg.from.id;
-
-  bot.sendMessage(fromId, modeAnswers.add);
-
-});
 
 // Any kind of message
 bot.on('message', msg => {
-  const { from, chat, message_id, text } = msg;
+  const { from, text } = msg;
   const command = text.match(/\/(.+)/);
 
   // command message
   if (command) {
-    const mode = command.pop();
-
-    currentModes[from.id] = mode === 'cancel' ? '' : mode;
-    console.log('CurrentMode of user', from.username, '[', from.id, '] was set to', currentModes[from.id]);
-
-    return;
-  }
-
+    processCommand(from, command.pop());
   // after-command message
-  if (currentModes[from.id]) {
-    processAnswer(from.id, text);
+  } else if (currentModes[from.id]) {
+    processAnswer(from, text);
+  // new user
   } else {
-    storage.createUser({
-      id: from.id,
-      username: from.username,
-      firstName: from.first_name,
-      lastName: from.last_name,
-    });
-
-    bot.sendMessage(from.id, defaultAnswer);
+    processNewUser(from);
   }
 });
