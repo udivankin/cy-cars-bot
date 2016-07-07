@@ -34,7 +34,7 @@ Car = sequelize.define(
     price: Sequelize.STRING,
   },
   {
-    indexes: [{ fields: ['vendorId', 'vendorName', 'title'] }]
+    indexes: [{ fields: ['vendorId', 'vendorName', 'title'] }],
   }
 );
 
@@ -45,7 +45,18 @@ Subscription = sequelize.define(
     searchString: Sequelize.STRING,
   },
   {
-    indexes: [{ fields: ['userId', 'searchString'] }]
+    indexes: [{ fields: ['userId', 'searchString'] }],
+  }
+);
+
+Notification = sequelize.define(
+  'notification',
+  {
+    userId: Sequelize.INTEGER,
+    carId: Sequelize.INTEGER,
+  },
+  {
+    indexes: [{ fields: ['userId', 'carId'] }],
   }
 );
 
@@ -87,6 +98,10 @@ class Storage {
         }
       );
   }
+
+  getAllSubscriptions() {
+    return Subscription.findAll();
+  };
 
   getSubscriptions(userId) {
     return Subscription
@@ -135,6 +150,23 @@ class Storage {
 
       });
   };
+
+  isUserNotified(userId, carId) {
+    return Notification
+      .count({ where: { userId, carId } })
+      .then(count => count > 0);
+  };
+
+  addUserNotification(userId, carId) {
+    return sequelize
+      .sync()
+      .then(() => Notification.create({ userId, carId }));
+  }
+
+  getLatestCars() {
+    return Car
+      .findAll();
+  }
 }
 
 module.exports = new Storage();

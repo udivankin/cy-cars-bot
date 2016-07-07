@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/udivankin/cy-cars-bot#readme",
   "dependencies": {
+    "bluebird": "^3.4.1",
     "cheerio": "^0.20.0",
     "lodash": "^4.13.1",
     "mysql": "^2.11.1",

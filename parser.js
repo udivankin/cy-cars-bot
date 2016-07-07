@@ -4,7 +4,7 @@ const config = require('./config.js');
 const storage = require('./storage.js');
 
 class Parser {
-  parse() {
+  gather() {
     config.hosts.forEach(host => {
       request(host.url, (err, resp, body) => {
         if (err) {
@@ -13,7 +13,6 @@ class Parser {
         }
 
         const result = host.parser(cheerio.load(body));
-
         storage.addCars(result);
       });
     });
