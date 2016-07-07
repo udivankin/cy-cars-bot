@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const config = require('./config.js');
+const _ = require('lodash');
 
 sequelize = new Sequelize(config.dbName, config.dbUser, config.dbPass, {
   host: 'localhost',
@@ -18,6 +19,22 @@ User = sequelize.define(
     username:  { type: Sequelize.STRING, unique: true },
     firstName: Sequelize.STRING,
     lastName: Sequelize.STRING,
+  }
+);
+
+Car = sequelize.define(
+  'car',
+  {
+    vendorId: Sequelize.STRING,
+    vendorName: Sequelize.STRING,
+    title: Sequelize.STRING,
+    link: Sequelize.STRING,
+    location: Sequelize.STRING,
+    year: Sequelize.STRING,
+    price: Sequelize.STRING,
+  },
+  {
+    indexes: [{ fields: ['vendorId', 'vendorName', 'title'] }]
   }
 );
 
@@ -100,6 +117,22 @@ class Storage {
       .then(() => Subscription.destroy({ where: { userId } }))
       .then(subscriptions => {
         console.log('Subscription deleted', subscriptions);
+      });
+  };
+
+  addCars(cars) {
+    return sequelize
+      .sync()
+      .then(() => {
+        if (!_.isEmpty(cars)) {
+          cars.forEach(car => {
+            Car.findOrCreate({
+              where: _.pick(car, ['vendorId', 'vendorName']),
+              defaults: car,
+            });
+          })
+        }
+
       });
   };
 }

@@ -8,6 +8,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const storage = require('./storage.js');
 const _ = require('lodash');
 const config = require('./config.js');
+const cron = require('./cron.js');
 
 // Setup polling way
 const bot = new TelegramBot(config.token, { polling: true });
