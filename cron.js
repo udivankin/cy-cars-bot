@@ -8,7 +8,7 @@ const Promise = require('bluebird');
 
 class Cron {
   start() {
-    this.gatherTimer = schedule.scheduleJob('*/10 * * * * *', this.gather);
+    this.gatherTimer = schedule.scheduleJob('*/51 * * * *', this.gather);
     this.sendTimer = schedule.scheduleJob('*/10 * * * *', this.send);
     console.log('Cron initialized');
     this.gather();
@@ -16,7 +16,7 @@ class Cron {
   }
 
   gather() {
-    // parser.gather();
+    parser.gather();
   }
 
   send() {
