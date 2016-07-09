@@ -8,15 +8,25 @@ const Promise = require('bluebird');
 
 class Cron {
   start() {
-    this.gatherTimer = schedule.scheduleJob('*/51 * * * *', this.gather);
-    this.sendTimer = schedule.scheduleJob('*/10 * * * *', this.send);
     console.log('Cron initialized');
-    this.gather();
+    this.getherJobs = [];
+    this.sendJob = null;
+    this.initSendJobs();
+    this.initGatherJobs();
+  }
+
+  initSendJobs() {
+    this.sendJob = schedule.scheduleJob('*/10 * * * *', this.send);
     this.send();
   }
 
-  gather() {
-    parser.gather();
+  initGatherJobs() {
+    config.hosts.forEach(host => {
+      const randomMinute = _.random(1, 59);
+      const cronString = randomMinute + ' */' + host.interval + ' * * *';
+      this.getherJobs.push(schedule.scheduleJob(cronString, _.partial(parser.gather, host)));
+    });
+    parser.gatherAll();
   }
 
   send() {
@@ -32,7 +42,7 @@ class Cron {
           const regexp = RegExp('(' + _.toLower(subscription.searchString).replace(' ', '|') + ')', 'gi');
           const wordCount = subscription.searchString.split(' ').length;
           const matchedCars = _.filter(cars, car => {
-            const matches = _.toLower(car.title).match(regexp);
+            const matches = _.uniq(_.toLower(car.title).match(regexp));
             return matches && matches.length >= wordCount;
           });
 
