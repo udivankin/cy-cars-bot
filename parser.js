@@ -2,12 +2,13 @@ const request = require('request');
 const cheerio = require('cheerio');
 const config = require('./config.js');
 const storage = require('./storage.js');
+const logger = require('./logger.js');
 
 class Parser {
   gather(host) {
     request(host.url, (err, resp, body) => {
       if (err) {
-        console.log('Error in url request');
+        logger.error('Error in url request');
         return;
       }
 

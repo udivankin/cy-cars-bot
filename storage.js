@@ -1,8 +1,9 @@
 const Sequelize = require('sequelize');
 const config = require('./config.js');
 const _ = require('lodash');
+const logger = require('./logger.js');
 
-sequelize = new Sequelize(config.dbName, config.dbUser, config.dbPass, {
+const sequelize = new Sequelize(config.dbName, config.dbUser, config.dbPass, {
   host: 'localhost',
   dialect: 'mysql',
   pool: {
@@ -12,7 +13,7 @@ sequelize = new Sequelize(config.dbName, config.dbUser, config.dbPass, {
   },
 });
 
-User = sequelize.define(
+const User = sequelize.define(
   'user',
   {
     id: { type: Sequelize.INTEGER, primaryKey: true },
@@ -22,7 +23,7 @@ User = sequelize.define(
   }
 );
 
-Car = sequelize.define(
+const Car = sequelize.define(
   'car',
   {
     vendorId: Sequelize.STRING,
@@ -38,7 +39,7 @@ Car = sequelize.define(
   }
 );
 
-Subscription = sequelize.define(
+const Subscription = sequelize.define(
   'subscription',
   {
     userId: Sequelize.INTEGER,
@@ -49,7 +50,7 @@ Subscription = sequelize.define(
   }
 );
 
-Notification = sequelize.define(
+const Notification = sequelize.define(
   'notification',
   {
     userId: Sequelize.INTEGER,
@@ -64,11 +65,11 @@ class Storage {
   constructor() {
     sequelize
       .authenticate()
-      .then(err => {
-        console.log('Database connection has been established successfully.');
+      .then(() => {
+        logger.logger('Database connection has been established successfully.');
       })
       .catch(err => {
-        console.log('Unable to connect to the database:', err);
+        logger.error('Unable to connect to the database:', err);
       });
   }
 
@@ -92,8 +93,8 @@ class Storage {
               .sync()
               .then(() => User.create({ id, username, firstName, lastName }))
               .then(user => {
-                console.log('User created', user.get({ plain: true }));
-              })
+                logger.info('User created', user.get({ plain: true }));
+              });
           }
         }
       );
@@ -101,39 +102,39 @@ class Storage {
 
   getAllSubscriptions() {
     return Subscription.findAll();
-  };
+  }
 
   getSubscriptions(userId) {
     return Subscription
       .findAll({ where: { userId } });
-  };
+  }
 
   addSubscription(userId, searchString) {
     return sequelize
       .sync()
       .then(() => Subscription.create({ userId, searchString }))
       .then(subscription => {
-        console.log('Subscription created', subscription.get({ plain: true }));
+        logger.info('Subscription created', subscription.get({ plain: true }));
       });
-  };
+  }
 
   removeSubscription(userId, searchString) {
     return sequelize
       .sync()
       .then(() => Subscription.destroy({ where: { userId, searchString } }))
       .then(subscription => {
-        console.log('Subscription deleted', subscription);
+        logger.info('Subscription deleted', subscription);
       });
-  };
+  }
 
   removeAllSubscriptions(userId) {
     return sequelize
       .sync()
       .then(() => Subscription.destroy({ where: { userId } }))
       .then(subscriptions => {
-        console.log('Subscription deleted', subscriptions);
+        logger.info('Subscription deleted', subscriptions);
       });
-  };
+  }
 
   addCars(cars) {
     return sequelize
@@ -145,17 +146,17 @@ class Storage {
               where: _.pick(car, ['vendorId', 'vendorName']),
               defaults: car,
             });
-          })
+          });
         }
 
       });
-  };
+  }
 
   isUserNotified(userId, carId) {
     return Notification
       .count({ where: { userId, carId } })
       .then(count => count > 0);
-  };
+  }
 
   addUserNotification(userId, carId) {
     return sequelize

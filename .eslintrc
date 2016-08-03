@@ -1,5 +1,9 @@
 {
   "plugins": ["node"],
+  "env": {
+    "es6": true,
+    "node": true
+  },
   "extends": ["eslint:recommended", "plugin:node/recommended"],
   "parserOptions": {
     "ecmaVersion": 6,
@@ -9,9 +13,8 @@
     }
   },
   "rules": {
-    "semi": 2
+    "semi": 2,
+    "node/no-unsupported-features": [2, { "version": 6 }],
+    "node/no-unpublished-require": 0
   },
-  env: {
-    es6: true
-  }
 }
