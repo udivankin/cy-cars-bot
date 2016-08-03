@@ -66,7 +66,7 @@ class Storage {
     sequelize
       .authenticate()
       .then(() => {
-        logger.logger('Database connection has been established successfully.');
+        logger.info('Database connection has been established successfully.');
       })
       .catch(err => {
         logger.error('Unable to connect to the database:', err);
