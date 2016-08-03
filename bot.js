@@ -31,7 +31,6 @@ class Bot {
 
     // command message
     if (command) {
-      this.createUser(from);
       this.processCommand(from, command.pop());
     // after-command message
     } else if (currentModes[from.id]) {
@@ -48,26 +47,35 @@ class Bot {
   }
 
   processCommand(user, command) {
-    currentModes[user.id] = command === 'cancel' ? '' : command;
+    currentModes[user.id] = command;
 
     switch (command) {
+      case 'start':
+        this.clearCurrentMode(user);
+        this.processNewUser(user);
+
+        break;
+
       case 'add':
         this.bot.sendMessage(user.id, modeAnswers[command]);
 
         break;
 
       case 'cancel':
-        this.bot.sendMessage(user.id, modeAnswers[command]);
+        this.clearCurrentMode(user);
+        this.bot.sendMessage(user.id, modeAnswers[command], { reply_markup: { hide_keyboard: true } });
 
         break;
 
       case 'clear':
+        this.clearCurrentMode(user);
         storage.removeAllSubscriptions(user.id);
         this.bot.sendMessage(user.id, modeAnswers[command]);
 
         break;
 
       case 'list':
+        this.clearCurrentMode(user);
         storage
           .getSubscriptions(user.id)
           .then(subscriptions => {
@@ -83,8 +91,6 @@ class Bot {
               this.bot.sendMessage(user.id, 'Here is your watch list:' + '\n\n' + list);
             }
           });
-
-        currentModes[user.id] = '';
 
         break;
 
@@ -119,6 +125,10 @@ class Bot {
     }
 
     logger.info('CurrentMode of user', user.username, '[', user.id, '] was set to', currentModes[user.id]);
+  }
+
+  clearCurrentMode(user) {
+    currentModes[user.id] = '';
   }
 
   processAnswer(user, text) {
