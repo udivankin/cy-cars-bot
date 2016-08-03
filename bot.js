@@ -2,6 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const storage = require('./storage.js');
 const _ = require('lodash');
 const config = require('./config.js');
+const logger = require('./logger.js');
 
 let currentModes = {}; // userId -> mode
 
@@ -21,7 +22,7 @@ class Bot {
 
   init() {
     this.bot.on('message', this.processMessage.bind(this));
-    console.log('Bot initialized');
+    logger.info('Bot initialized');
   }
 
   processMessage(message) {
@@ -30,6 +31,7 @@ class Bot {
 
     // command message
     if (command) {
+      this.createUser(from);
       this.processCommand(from, command.pop());
     // after-command message
     } else if (currentModes[from.id]) {
@@ -41,13 +43,7 @@ class Bot {
   }
 
   processNewUser(user) {
-    storage.createUser({
-      id: user.id,
-      username: user.username,
-      firstName: user.first_name,
-      lastName: user.last_name,
-    });
-
+    this.createUser(user);
     this.bot.sendMessage(user.id, defaultAnswer);
   }
 
@@ -122,7 +118,7 @@ class Bot {
         break;
     }
 
-    console.log('CurrentMode of user', user.username, '[', user.id, '] was set to', currentModes[user.id]);
+    logger.info('CurrentMode of user', user.username, '[', user.id, '] was set to', currentModes[user.id]);
   }
 
   processAnswer(user, text) {
@@ -142,6 +138,15 @@ class Bot {
       default:
         break;
     }
+  }
+
+  createUser(user) {
+    storage.createUser({
+      id: user.id,
+      username: user.username,
+      firstName: user.first_name,
+      lastName: user.last_name,
+    });
   }
 
   sendNotification(userId, car) {

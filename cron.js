@@ -5,10 +5,11 @@ const config = require('./config.js');
 const storage = require('./storage.js');
 const bot = require('./bot.js');
 const Promise = require('bluebird');
+const logger = require('./logger.js');
 
 class Cron {
   start() {
-    console.log('Cron initialized');
+    logger.info('Cron initialized');
     this.getherJobs = [];
     this.sendJob = null;
     this.initSendJobs();
