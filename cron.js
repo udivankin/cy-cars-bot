@@ -7,6 +7,10 @@ const bot = require('./bot.js');
 const Promise = require('bluebird');
 const logger = require('./logger.js');
 
+function escapeRegExp(str) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
 class Cron {
   start() {
     logger.info('Cron initialized');
@@ -40,7 +44,8 @@ class Cron {
         }
 
         subscriptions.forEach(subscription => {
-          const regexp = RegExp('(' + _.toLower(subscription.searchString).replace(' ', '|') + ')', 'gi');
+          const safeSearchString = _.toLower(escapeRegExp(subscription.searchString));
+          const regexp = RegExp('(' + safeSearchString.replace(' ', '|') + ')', 'gi');
           const wordCount = subscription.searchString.split(' ').length;
           const matchedCars = _.filter(cars, car => {
             const matches = _.uniq(_.toLower(car.title + ' ' + car.year).match(regexp));
