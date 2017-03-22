@@ -43,7 +43,7 @@ class Cron {
           const regexp = RegExp('(' + _.toLower(subscription.searchString).replace(' ', '|') + ')', 'gi');
           const wordCount = subscription.searchString.split(' ').length;
           const matchedCars = _.filter(cars, car => {
-            const matches = _.uniq(_.toLower(car.title).match(regexp));
+            const matches = _.uniq(_.toLower(car.title + ' ' + car.year).match(regexp));
             return matches && matches.length >= wordCount;
           });
 
