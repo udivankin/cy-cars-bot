@@ -160,7 +160,8 @@ class Bot {
   }
 
   sendNotification(userId, car) {
-    const text = 'We found something for you!\n\n' + car.title + '\n' + car.link;
+    const price = car.price ? ' - €' + car.price : '';
+    const text = 'We found something for you!\n\n' + car.title + price + '\n' + car.link;
     this.bot.sendMessage(userId, text);
   }
 }
