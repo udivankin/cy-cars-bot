@@ -169,7 +169,7 @@ class Bot {
     this.bot
       .sendMessage(userId, text)
       .catch((error) => {
-        logger.info('Send message failed', { userId, text }, error);
+        logger.error('Send message failed', { userId, text }, error.code, error.response.body);
       });
   }
 }
