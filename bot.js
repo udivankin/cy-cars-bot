@@ -43,7 +43,7 @@ class Bot {
 
   processNewUser(user) {
     this.createUser(user);
-    this.bot.sendMessage(user.id, defaultAnswer);
+    this.sendMessage(user.id, defaultAnswer);
   }
 
   processCommand(user, command) {
@@ -57,20 +57,20 @@ class Bot {
         break;
 
       case 'add':
-        this.bot.sendMessage(user.id, modeAnswers[command]);
+        this.sendMessage(user.id, modeAnswers[command]);
 
         break;
 
       case 'cancel':
         this.clearCurrentMode(user);
-        this.bot.sendMessage(user.id, modeAnswers[command], { reply_markup: { hide_keyboard: true } });
+        this.sendMessage(user.id, modeAnswers[command], { reply_markup: { hide_keyboard: true } });
 
         break;
 
       case 'clear':
         this.clearCurrentMode(user);
         storage.removeAllSubscriptions(user.id);
-        this.bot.sendMessage(user.id, modeAnswers[command]);
+        this.sendMessage(user.id, modeAnswers[command]);
 
         break;
 
@@ -80,7 +80,7 @@ class Bot {
           .getSubscriptions(user.id)
           .then(subscriptions => {
             if (_.isEmpty(subscriptions)) {
-              this.bot.sendMessage(user.id, modeAnswers['emptyList']);
+              this.sendMessage(user.id, modeAnswers['emptyList']);
             } else {
               let list = '';
 
@@ -88,7 +88,7 @@ class Bot {
                 list += item.searchString + '\n';
               });
 
-              this.bot.sendMessage(user.id, 'Here is your watch list:' + '\n\n' + list);
+              this.sendMessage(user.id, 'Here is your watch list:' + '\n\n' + list);
             }
           });
 
@@ -99,7 +99,7 @@ class Bot {
           .getSubscriptions(user.id)
           .then(subscriptions => {
             if (_.isEmpty(subscriptions)) {
-              this.bot.sendMessage(user.id, modeAnswers['emptyList']);
+              this.sendMessage(user.id, modeAnswers['emptyList']);
               currentModes[user.id] = '';
             } else {
               const list = [];
@@ -114,7 +114,7 @@ class Bot {
                 one_time_keyboard: true,
               };
 
-              this.bot.sendMessage(user.id, 'Please select what should we delete:', { reply_markup: markup });
+              this.sendMessage(user.id, 'Please select what should we delete:', { reply_markup: markup });
             }
           });
 
@@ -135,13 +135,13 @@ class Bot {
     switch (currentModes[user.id]) {
       case 'add':
         storage.addSubscription(user.id, text);
-        this.bot.sendMessage(user.id, 'Ok, "' + text + '" was added to your watch list. We`ll keep you updated!');
+        this.sendMessage(user.id, 'Ok, "' + text + '" was added to your watch list. We`ll keep you updated!');
 
         break;
 
       case 'delete':
         storage.removeSubscription(user.id, text);
-        this.bot.sendMessage(user.id, 'Ok, "' + text + '" was removed from your watch list.', { reply_markup: { hide_keyboard: true } });
+        this.sendMessage(user.id, 'Ok, "' + text + '" was removed from your watch list.', { reply_markup: { hide_keyboard: true } });
 
         break;
 
@@ -162,7 +162,15 @@ class Bot {
   sendNotification(userId, car) {
     const price = car.price ? ' - €' + car.price : '';
     const text = 'We found something for you!\n\n' + car.title + price + '\n' + car.link;
-    this.bot.sendMessage(userId, text);
+    this.sendMessage(userId, text);
+  }
+
+  sendMessage(userId, text) {
+    this.bot
+      .sendMessage(userId, text)
+      .catch((error) => {
+        logger.info('Send message failed', { userId, text }, error);
+      });
   }
 }
 
