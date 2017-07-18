@@ -26,6 +26,7 @@ const User = sequelize.define(
 const Car = sequelize.define(
   'car',
   {
+    id: { type: Sequelize.INTEGER, primaryKey: true },
     vendorId: Sequelize.STRING,
     vendorName: Sequelize.STRING,
     title: Sequelize.STRING,
@@ -42,6 +43,7 @@ const Car = sequelize.define(
 const Subscription = sequelize.define(
   'subscription',
   {
+    id: { type: Sequelize.INTEGER, primaryKey: true },
     userId: Sequelize.INTEGER,
     searchString: Sequelize.STRING,
   },
@@ -53,6 +55,7 @@ const Subscription = sequelize.define(
 const Notification = sequelize.define(
   'notification',
   {
+    id: { type: Sequelize.INTEGER, primaryKey: true },
     userId: Sequelize.INTEGER,
     carId: Sequelize.INTEGER,
   },
@@ -166,7 +169,7 @@ class Storage {
 
   getLatestCars() {
     return Car
-      .findAll({ limit: 1000, order: [[Car, 'id', 'DESC']] });
+      .findAll({ limit: 1000, order: [['id', 'DESC']] });
   }
 }
 
