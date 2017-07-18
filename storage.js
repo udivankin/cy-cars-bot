@@ -166,7 +166,7 @@ class Storage {
 
   getLatestCars() {
     return Car
-      .findAll({ limit: 1000, order: 'id DESC' });
+      .findAll({ limit: 1000, order: ['id DESC'] });
   }
 }
 
