@@ -1,18 +1,15 @@
-const _ = require('lodash');
-const request = require('request');
+const { get } = require('pico-ajax');
 const cheerio = require('cheerio');
 const config = require('./config.js');
 const logger = require('./logger.js');
 
-const host = _.last(config.hosts);
+const testParser = host => get(host.url)
+    .then((response) => {
+      const result = host.parser(cheerio.load(response));
+      logger.info(result);
+    })
+    .catch((error) => {
+      logger.error('Error in url request', error);
+    });
 
-request(host.url, (err, resp, body) => {
-  if (err) {
-    logger.error('Error in url request');
-    return;
-  }
-
-  const result = host.parser(cheerio.load(body));
-
-  logger.info(result);
-});
+config.hosts.forEach(testParser);
